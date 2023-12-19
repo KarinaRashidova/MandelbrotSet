@@ -188,7 +188,7 @@ fun JuliaApp(mandelbrotFp:FractalPainter) {
             Box(
                 Modifier.fillMaxSize()
             ){
-                mainFractalWindow(fp,actionStack)
+                fractalWindow(fp,actionStack)
             }
         }
     }
