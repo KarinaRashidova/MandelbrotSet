@@ -1,34 +1,43 @@
-package controls
+package gui.video
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import drawing.convertation.ColorFuncs
+import gui.controls.intTextField
+import tools.FileManager
+import video.Cadre
+import video.VideoConfiguration
+import video.VideoMaker
+
 
 @Composable
-fun workWithVideoDialog(close:()->Unit) {
-    var height by remember { mutableStateOf(0) }
-    var width by remember { mutableStateOf(0) }
-    var fps by remember { mutableStateOf(0) }
-    var duration by remember { mutableStateOf(0) }
+fun workWithVideoDialog(
+    colorScheme: ColorFuncs,
+    imageList: SnapshotStateList<Cadre>,
+    close:()->Unit,
+) {
+    var height = 600
+    var width = 800
+    var fps = 24
+    var duration = 5
+    var vm: VideoMaker
+
+    var currentProgress by remember { mutableStateOf(0f) }
+    var loading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -73,16 +82,16 @@ fun workWithVideoDialog(close:()->Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             intTextField(
-                value = height,
-                label = "Высота",
-                onValueChange = {height=it},
+                value = width,
+                label = "Ширина",
+                onValueChange = {width=it},
                 maxValue = 10000,
                 modifier = Modifier.weight(1f)
             )
             intTextField(
-                value = width,
-                label = "Ширина",
-                onValueChange = {width=it},
+                value = height,
+                label = "Высота",
+                onValueChange = {height=it},
                 maxValue = 10000,
                 modifier = Modifier.weight(1f)
             )
@@ -120,7 +129,20 @@ fun workWithVideoDialog(close:()->Unit) {
         ) {
             Button(
                 onClick = {
-
+                    val filePath = FileManager.getPathForVideoSave()?.let {
+                        val configuration = VideoConfiguration(
+                            width.toFloat(),
+                            height.toFloat(),
+                            duration,
+                            fps,
+                            it,
+                            imageList,
+                            colorScheme
+                        )
+                        vm = VideoMaker(configuration)
+                        println("Начинаем делать видео")
+                        vm.getVideo(VideoMaker.InterpolationMethod.CatmullRom)
+                    }
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -130,9 +152,7 @@ fun workWithVideoDialog(close:()->Unit) {
                 Text("Создать")
             }
             Button(
-                onClick = {
-
-                },
+                onClick = { imageList.clear() },
                 modifier = Modifier
                     .weight(1f)
                     .padding(16.dp)
@@ -141,22 +161,24 @@ fun workWithVideoDialog(close:()->Unit) {
                 Text("Очистить")
             }
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 2.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ){
+        if (loading) {
+            LinearProgressIndicator(
+                strokeCap = StrokeCap.Round,
+                modifier = Modifier.fillMaxWidth(),
+                progress = currentProgress ,
+            )
         }
-        Row(
+        LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 2.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(vertical = 10.dp, horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
-        ){
-
+        ) {
+            items(imageList) {
+                myCard(it.preRenderImg) { imageList.remove(it) }
+            }
         }
     }
 }
+

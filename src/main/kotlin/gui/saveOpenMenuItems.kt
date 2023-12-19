@@ -1,4 +1,4 @@
-package controls
+package gui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -17,25 +16,26 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 @Composable
-fun showSaveDialog(text: String, imageSave: () -> Unit, fractalSave: () -> Unit,close: () -> Unit) {
+fun saveOpenMenuItems(imageSave: () -> Unit,
+                      fractalSave: () -> Unit,
+                      fractalLoad: () -> Unit,
+                      close: () -> Unit) {
     var isDialogVisible by remember { mutableStateOf(false) }
 
-    // Добавленная кнопка для открытия диалогового окна
-    DropdownMenuItem(
-        onClick = {
-            isDialogVisible = true
-        }
-    ) {
-        Text(text)
-    }
+    DropdownMenuItem({ isDialogVisible = true })
+    { Text("Сохранить") }
 
-    // Диалоговое окно
+    DropdownMenuItem({
+        close()
+        fractalLoad()
+    }){ Text("Открыть") }
+
     if (isDialogVisible) {
         Dialog(
             onDismissRequest = {
-                isDialogVisible = false
                 close()
-            },
+                isDialogVisible = false
+                               },
             properties = DialogProperties(dismissOnClickOutside = true)
         ) {
             Column(
@@ -53,7 +53,6 @@ fun showSaveDialog(text: String, imageSave: () -> Unit, fractalSave: () -> Unit,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Текст в диалоговом окне
                     Text(
                         "Как вы хотите сохранить файл?",
                         fontSize = 18.sp,
@@ -61,20 +60,13 @@ fun showSaveDialog(text: String, imageSave: () -> Unit, fractalSave: () -> Unit,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f)
                     )
-                    //Закрытие
                     IconButton(
                         onClick = {
                             close()
-                            isDialogVisible = false
-                        },
+                            isDialogVisible = false },
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            "Закрыть"
-                        )
-                    }
+                    ) { Icon(Icons.Default.Close, "Закрыть") }
                 }
 
                 // Кнопки в строку
@@ -88,7 +80,7 @@ fun showSaveDialog(text: String, imageSave: () -> Unit, fractalSave: () -> Unit,
                     Button(
                         onClick = {
                             imageSave()
-                            isDialogVisible = false
+                            close()
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -100,7 +92,7 @@ fun showSaveDialog(text: String, imageSave: () -> Unit, fractalSave: () -> Unit,
                     Button(
                         onClick = {
                             fractalSave()
-                            isDialogVisible = false
+                            close()
                         },
                         modifier = Modifier
                             .weight(1f)
